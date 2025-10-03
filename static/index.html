@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web_ProgrammingLab 1</title>
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<header id="header">
+    <div class="header-container">
+        <h1 class="main-title">Check Point On a Graph</h1>
+        <p id="student-info">Student: SHUAIBU IDRIS, Group: P3231, Variant: 463221</p>
+    </div>
+</header>
+
+<main id="main">
+    <div class="split-container">
+        <div class="form-section">
+            <div class="card form-card">
+                <form id="data-form">
+                    <h3 class="form-header card-title">Parameters</h3>
+
+                    <div class="form-group">
+                        <label class="r-param-label">R Parameter:</label>
+                        <div class="radio-group" id="r-button-group">
+                            <input type="button" class="r-button" value="1" data-r="1.0">
+                            <input type="button" class="r-button" value="1.5" data-r="1.5">
+                            <input type="button" class="r-button" value="2" data-r="2.0">
+                            <input type="button" class="r-button" value="2.5" data-r="2.5">
+                            <input type="button" class="r-button" value="3" data-r="3.0">
+                        </div>
+                        <input type="hidden" id="r-param-input" name="r" value="2" />
+                        <div class="validation-hint">Value must be one of: 1, 1.5, 2, 2.5, 3</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="x-coord-label" for="x-select">X Coordinate:</label>
+                        <select id="x-select" name="x" class="custom-select">
+                            <option value="-2">-2</option>
+                            <option value="-1.5">-1.5</option>
+                            <option value="-1">-1</option>
+                            <option value="-0.5">-0.5</option>
+                            <option value="0" selected>0</option>
+                            <option value="0.5">0.5</option>
+                            <option value="1">1</option>
+                            <option value="1.5">1.5</option>
+                            <option value="2">2</option>
+                        </select>
+                        <div class="validation-hint">Select a value for X</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="y-coord-label" for="y-param-input">Y Coordinate:</label>
+                        <input type="text" id="y-param-input" name="y" placeholder="Enter Y value" value="0" />
+                        <div class="validation-hint">Value must be between -5 and 3</div>
+                    </div>
+
+                    <button id="form-btn" type="submit">Check Point</button>
+                    <p id="error" class="error-message" hidden>Validation Error</p>
+                </form>
+            </div>
+
+            <div class="live-info card">
+                <h3 class="live-info-header card-title">Live Data</h3>
+                <div class="live-info-details">
+                    <p>Current Time: <span id="curr-time">Loading...</span></p>
+                    <p>Execution Time: <span id="exec-time">Waiting...</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-section">
+            <div class="img-div card">
+                <h3 class="card-title">Graph</h3>
+                <canvas id="graph" width="400" height="400"></canvas>
+            </div>
+
+            <div class="results-div card">
+                <div class="results-div-header">
+                    <h3 class="results-header card-title">Results Table</h3>
+                    <button id="clear-results" onclick="clearResults()" type="button">Clear Table</button>
+                </div>
+                <div class="results-table-container">
+                    <table id="result-table">
+                        <thead>
+                        <tr>
+                            <th>R</th>
+                            <th>X</th>
+                            <th>Y</th>
+                            <th>Time</th>
+                            <th>Execution Time</th>
+                            <th>Result</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer></footer>
+
+<script src="script.js" type="text/javascript"></script>
+</body>
+</html>

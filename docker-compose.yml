@@ -1,0 +1,27 @@
+version: "3.9"
+services:
+  #FastCGI Java server
+  fcgi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      backend:
+        aliases:
+          - fcgi
+  # Apache HTTP server
+  httpd:
+    image: "httpd:2.4.62"
+    ports:
+      - "8080:80"
+    volumes:
+      - "./httpd.conf:/usr/local/apache2/conf/httpd.conf"
+      - "./static:/var/www"
+    depends_on:
+      - fcgi
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
