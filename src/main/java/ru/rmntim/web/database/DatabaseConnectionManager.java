@@ -13,7 +13,10 @@ public class DatabaseConnectionManager {
     public DatabaseConnectionManager() {
         this.jdbcUrl = "jdbc:postgresql://pg:5432/studs";
         this.dbUsername = "s463221";
-        this.dbPassword = "2Z10XAAym4KIr3aR";
+        this.dbPassword = System.getenv("DB_PASSWORD");
+        if(this.dbPassword == null) {
+            throw new IllegalStateException("Environment variable DB_PASSWORD is not set");
+        }
         try {
             // Ensures the PostgreSQL driver is loaded
             Class.forName("org.postgresql.Driver");
