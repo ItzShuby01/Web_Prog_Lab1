@@ -248,26 +248,25 @@ form.addEventListener("submit", async function (ev) {
     try {
         const response = await fetch("/fcgi-bin/app.jar?" + params.toString());
         const endTime = performance.now();
-        const executionTime = (endTime - startTime).toFixed(2);
+        const clientExecutionTime = (endTime - startTime).toFixed(2); // To avoid confusion with server's execTime
 
         const result = await response.json();
 
         if (response.ok) {
             const newRowData = {
-                x: state.x,
-                y: state.y,
-                r: state.r,
-                time: new Date(result.now).toLocaleString(),
-                execTime: `${executionTime} ms`,
+                x: result.x, // Use server's returned x, y, r
+                y: result.y,
+                r: result.r,
+                time: new Date(result.time).toLocaleString(), // Use server's time
+                execTime: `${result.execTime.toFixed(2)} ms`, // Use server's execTime, formatted
                 result: result.result ? 'Hit' : 'Miss',
             };
 
-            executionTimeSpan.innerHTML = `${executionTime} ms`;
+            executionTimeSpan.innerHTML = `${clientExecutionTime} ms`; // Display client's measure
             addResultToTable(newRowData);
-            saveResultToLocalStorage(newRowData);
 
-            const hit = result.result;
-            points.push({ x: state.x, y: state.y, hit });
+            const hit = result.result; // Use server's result.result (boolean)
+            points.push({ x: result.x, y: result.y, hit });
             drawGraph(state.r);
         } else {
             const errorReason = result.reason || `Server responded with ${response.status}`;
@@ -292,26 +291,64 @@ function addResultToTable(data) {
     newRow.insertCell(5).textContent = data.result;
 }
 
-function saveResultToLocalStorage(data) {
-    const prev = JSON.parse(localStorage.getItem("results") || "[]");
-    localStorage.setItem("results", JSON.stringify([data, ...prev]));
+
+async function loadResults() {
+    try {
+        const response = await fetch("/fcgi-bin/app.jar?get_all_results"); // Server endpoint
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const results = await response.json(); // Server returns an array of results
+
+        // Clear existing table and points before loading from server
+        resultTableBody.innerHTML = "";
+        points = [];
+
+        results.forEach(d => {
+            // Map server's response format to what addResultToTable expects
+            const rowData = {
+                x: d.x,
+                y: d.y,
+                r: d.r,
+                time: new Date(d.time).toLocaleString(), // Convert server's ISO string to local date/time
+                execTime: `${d.execTime.toFixed(2)} ms`, // Server returns milliseconds directly
+                result: d.result ? 'Hit' : 'Miss', // Server returns boolean
+            };
+            addResultToTable(rowData);
+            points.push({ x: d.x, y: d.y, hit: d.result }); // d.result is already boolean
+        });
+        drawGraph(state.r);
+
+    } catch (error) {
+        console.error("Failed to load results from server:", error);
+        errorDisplay.textContent = "Could not load past results from server.";
+        errorDisplay.hidden = false;
+    }
 }
 
-function loadResults() {
-    const prev = JSON.parse(localStorage.getItem("results") || "[]");
-    prev.forEach(d => {
-        addResultToTable(d);
-        points.push({ x: d.x, y: d.y, hit: d.result === "true" });
-    });
-    drawGraph(state.r);
-}
+clearResButton.addEventListener("click", async () => {
+    if (!confirm("Are you sure you want to clear all results? This action cannot be undone.")) {
+        return;
+    }
+    try {
+        const response = await fetch("/fcgi-bin/app.jar?clear_results"); // Server endpoint
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const message = await response.json(); // Server returns { "message": "Results cleared successfully" }
+        console.log(message.message);
 
-function clearResults() {
-    localStorage.removeItem("results");
-    resultTableBody.innerHTML = "";
-    points = [];
-    drawGraph(state.r);
-}
-clearResButton.addEventListener("click", clearResults);
+        // Clear client-side display after successful server clear
+        resultTableBody.innerHTML = "";
+        points = [];
+        drawGraph(state.r); // Redraw graph without points
+        errorDisplay.hidden = true; // Hide any previous error messages
 
-loadResults();
+    } catch (error) {
+        console.error("Failed to clear results on server:", error);
+        errorDisplay.textContent = "Could not clear results on server.";
+        errorDisplay.hidden = false;
+    }
+});
+
+loadResults(); // Call the updated loadResults to fetch from server on page load

@@ -6,12 +6,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Params {
     private final float x;
     private final float y;
     private final float r;
+
+    private static final Set<Float> ALLOWED_X_VALUES= Set.of(-2.0f, -1.5f, -1.0f, -0.5f, 0.0f, 0.5f, 1.0f, 1.5f, 2.0f);
+    private static final Set<Float> ALLOWED_R_VALUES = Set.of(1.0f, 1.5f, 2.0f, 2.5f, 3.0f);
+
 
     public Params(String query) throws ValidationException {
         if (query == null || query.isEmpty()) {
@@ -46,7 +51,7 @@ public class Params {
 
         try {
             var xx = Float.parseFloat(x);
-            if (xx < -4 || xx > 4) {
+            if (!ALLOWED_X_VALUES.contains(xx)) {
                 throw new ValidationException("x has forbidden value");
             }
         } catch (NumberFormatException e) {
@@ -60,7 +65,7 @@ public class Params {
 
         try {
             var yy = Float.parseFloat(y);
-            if (yy < -3 || yy > 5) {
+            if (yy < -5 || yy > 3) {
                 throw new ValidationException("y has forbidden value");
             }
         } catch (NumberFormatException e) {
@@ -74,7 +79,7 @@ public class Params {
 
         try {
             var rr = Float.parseFloat(r);
-            if (rr < 2 || rr > 5) {
+            if (!ALLOWED_R_VALUES.contains(rr)) {
                 throw new ValidationException("r has forbidden value");
             }
         } catch (NumberFormatException e) {
@@ -94,4 +99,6 @@ public class Params {
     public float getR() {
         return r;
     }
+
 }
+
