@@ -30,16 +30,7 @@ public class Main {
             
             %s
             """;
-    private static final String RESULT_JSON = """
-            {
-                "x": %f,
-                "y": %f,
-                "r": %f,
-                "time": "%s",
-                "execTime": %d,
-                "result": %b
-            }
-            """;
+
     private static final String ERROR_JSON = """
             {
                 "now": "%s",
