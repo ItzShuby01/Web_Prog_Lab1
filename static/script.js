@@ -1,5 +1,7 @@
 "use strict";
 
+const request = window.superagent;
+
 const form = document.getElementById("data-form");
 const rParamInput = document.getElementById("r-param-input");
 const xSelect = document.getElementById("x-select");
@@ -226,6 +228,7 @@ Object.values(validationRules).forEach(rule => {
     if (rule.hint) rule.hint.style.visibility = "hidden";
 });
 
+// Use SuperAgent for form submission
 form.addEventListener("submit", async function (ev) {
     ev.preventDefault();
     errorDisplay.hidden = true;
@@ -240,17 +243,24 @@ form.addEventListener("submit", async function (ev) {
         return;
     }
 
-    const params = new URLSearchParams({
-        x: state.x, y: state.y, r: state.r
-    });
+    const queryParams = {
+        x: state.x,
+        y: state.y,
+        r: state.r
+    };
 
     const startTime = performance.now();
     try {
-        const response = await fetch("/fcgi-bin/app.jar?" + params.toString());
+        // Replaced fetch API with request.get().query()
+        const response = await request
+            .get("/fcgi-bin/app.jar")
+            .query(queryParams); // SuperAgent automatically builds the QUERY STRING
+
         const endTime = performance.now();
         const clientExecutionTime = (endTime - startTime).toFixed(2); // To avoid confusion with server's execTime
 
-        const result = await response.json();
+        // SuperAgent parses JSON into response.body
+        const result = response.body;
 
         if (response.ok) {
             const newRowData = {
@@ -258,25 +268,33 @@ form.addEventListener("submit", async function (ev) {
                 y: result.y,
                 r: result.r,
                 time: new Date(result.time).toLocaleString(), // Use server's time
-                execTime: `${result.execTime.toFixed(2)} ms`, // Use server's execTime, formatted
+                execTime: `${result.execTime.toFixed(2)} ms`, // Use formatted server's execTime
                 result: result.result ? 'Hit' : 'Miss',
             };
 
             executionTimeSpan.innerHTML = `${clientExecutionTime} ms`; // Display client's measure
             addResultToTable(newRowData);
 
-            const hit = result.result; // Use server's result.result (boolean)
+            const hit = result.result; // server's result (boolean)
             points.push({ x: result.x, y: result.y, hit });
             drawGraph(state.r);
         } else {
-            const errorReason = result.reason || `Server responded with ${response.status}`;
-            errorDisplay.textContent = `Server Error: ${errorReason}`;
-            errorDisplay.hidden = false;
+             // Handling error with SuperAgent
+             const errorReason = result.reason || `Server responded with ${response.status}`;
+             errorDisplay.textContent = `Server Error: ${errorReason}`;
+             errorDisplay.hidden = false;
         }
 
-    } catch (fetchError) {
-        console.error("Fetch error:", fetchError);
-        errorDisplay.textContent = "Could not connect to the server.";
+    } catch (superAgentError) {
+        // Handling error thrown by SuperAgent
+        if (superAgentError.response && superAgentError.response.body) {
+             const result = superAgentError.response.body;
+             const errorReason = result.reason || `Server responded with ${superAgentError.response.status}`;
+             errorDisplay.textContent = `Server Error: ${errorReason}`;
+        } else {
+             console.error("SuperAgent error:", superAgentError);
+             errorDisplay.textContent = "Could not connect to the server.";
+        }
         errorDisplay.hidden = false;
     }
 });
@@ -292,20 +310,22 @@ function addResultToTable(data) {
 }
 
 
+// Rewrote loadResults  using SuperAgent
 async function loadResults() {
     try {
-        const response = await fetch("/fcgi-bin/app.jar?get_all_results"); // Server endpoint
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const results = await response.json(); // Server returns an array of results
+        // Replaced fetch() with request.get().query()
+        const response = await request
+            .get("/fcgi-bin/app.jar") // Server endpoint
+            .query({ get_all_results: "" }); // Send query parameter
+
+        const results = response.body; // Server returns an array of results
 
         // Clear existing table and points before loading from server
         resultTableBody.innerHTML = "";
         points = [];
 
         results.forEach(d => {
-            // Map server's response format to what addResultToTable expects
+            // Map server's response to addResultToTable columns
             const rowData = {
                 x: d.x,
                 y: d.y,
@@ -326,16 +346,18 @@ async function loadResults() {
     }
 }
 
+// Rewrite clearResults using SuperAgent
 clearResButton.addEventListener("click", async () => {
     if (!confirm("Are you sure you want to clear all results? This action cannot be undone.")) {
         return;
     }
     try {
-        const response = await fetch("/fcgi-bin/app.jar?clear_results"); // Server endpoint
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const message = await response.json(); // Server returns { "message": "Results cleared successfully" }
+        // Replaced fetch() with request.get().query()
+        const response = await request
+            .get("/fcgi-bin/app.jar") // Server endpoint
+            .query({ clear_results: "" }); // Send query parameter
+
+        const message = response.body; // Server returns { "message": "Results cleared successfully" }
         console.log(message.message);
 
         // Clear client-side display after successful server clear
