@@ -316,7 +316,7 @@ async function loadResults() {
         // Replaced fetch() with request.get().query()
         const response = await request
             .get("/fcgi-bin/app.jar") // Server endpoint
-            .query({ get_all_results: "" }); // Send query parameter
+            .query("get_all_results"); // Send query parameter
 
         const results = response.body; // Server returns an array of results
 
@@ -355,7 +355,7 @@ clearResButton.addEventListener("click", async () => {
         // Replaced fetch() with request.get().query()
         const response = await request
             .get("/fcgi-bin/app.jar") // Server endpoint
-            .query({ clear_results: "" }); // Send query parameter
+            .query("clear_results"); // Send query parameter
 
         const message = response.body; // Server returns { "message": "Results cleared successfully" }
         console.log(message.message);
